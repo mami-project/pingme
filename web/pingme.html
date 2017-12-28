@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>Ping Me</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+      var pingconfig = {}
+
+      pingconfig.pingURL = new URL("/ping", window.location.href)
+      pingconfig.contentURL = "https://cdn.spacetelescope.org/archives/images/large/heic0611b.jpg"
+
+      function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
+      function renderTimeSeries(pingResults) {
+        var resultElement = document.getElementById("result")
+
+        // FIXME data parsing and google charting goes here
+      }
+
+      async function pingMe() {
+        var statusElement = document.getElementById("status")
+
+        var downloadStart = new Date()
+        var pingDuration
+        var ok
+
+        // load content URL
+        pingconfig.contentURL = document.getElementById("content-url").value
+
+        // intial download
+        statusElement.textContent = "step 1: downloading content to determine ping duration"
+
+        ok = await fetch(pingconfig.contentURL, {cache: "no-store"}).then(function (response) {
+          return response.blob()
+        }).then(function (blob) {
+          pingDuration = 10 + Math.floor((new Date() - downloadStart) / 1000)
+          return true
+        }).catch(function (error) {
+          statusElement.textContent = "initial content download failed; see console"
+          console.log(error)
+        })
+
+        if (!ok) {
+          return
+        }
+
+        // request ping
+        statusElement.textContent = "step 2: starting ping for " + pingDuration + " seconds" 
+
+        var pingResponse = await fetch(pingconfig.pingURL + "?period=0.5&duration=" + pingDuration).then(function (response) {
+          return response
+        })
+
+        if (pingResponse.status != 200) {
+          statusElement.textContent = "ping failed; see console"
+          console.log(pingResponse)
+          return
+        }
+
+        var pingStart = new Date()
+        var pingResultLink = new URL(pingResponse.json.link, pingconfig.pingURL)
+
+        // wait four seconds to get baseline ping data, then start the download
+        await sleep(4000)
+
+        statusElement.textContent = "step 3: downloading content to load link" 
+
+        ok = await fetch(pingconfig.contentURL, {cache: "no-store"}).then(function (response) {
+          return response.blob()
+        }).then(function (blob) {
+          return true
+        }).catch(function (error) {
+          statusElement.textContent = "primary content download failed; see console"
+          console.log(error)
+          return false
+        })
+
+        if (!ok) {
+          return
+        }
+
+        // we know how long we asked to be pinged. we know how long the download took.
+        // now wait the rest of the time...
+        var waitDuration = (pingDuration + 3) * 1000 - (new Date() - pingStart)
+        if (waitDuration > 0) {
+          statusElement.textContent = "step 4: waiting "+Math.round(waitDuration / 1000)+"s for ping to complete"
+          await sleep(waitDuration)
+        }
+
+        // we know how long we asked to be pinged. we know how long the download took.
+        // now wait the rest of the time...
+        ok = await fetch(pingResultLink).then(function (response) {
+          return response.json
+        }).then(function (json) {
+          // FIXME somehow plot the results
+          return true
+        }).catch(function (error) {
+          statusElement.textContent = "ping result retrieval failed; see console"
+          return false
+        })
+
+        if (!ok) {
+          return
+        }
+
+        statusElement.textContent =  "measurement complete: results from "+pingResultLink.toString()
+      }
+    </script>
+  </head>
+  <body>
+
+    <h1>Ping Me, version 0.0.1</h1>
+
+    <p>This web tool measures the ability of a random Internet-connected node
+    to estimate activity on your network link by pinging you. It's a companion
+    to the PAM 2018 paper <span class="paper-title">Revisiting the Privacy
+    Implications of Two-Way Internet Latency Data</span>, available with
+    source data 
+    <a class="paper-link"
+    href="https://github.com/mami-project/rtt-privacy-paper">here</a>.</p>
+
+    <h2>Let's go!</h2>
+
+    <p>Click "start" below the to start the measurement. You can specify an
+    alternate content URL; it should be something that takes at least a few
+    seconds to download on your connection, though. Read below for details on
+    what's happening.</p>
+
+    <div class="tool">
+
+      <div class="output" id="status">The measurement is not running.</div>
+
+      <div class="output" id="result">Results will appear here.</div>
+
+      <div class="controls">
+
+        <form>
+          Content: <input type="url" id="content-url"></input>
+          <input type="button" onclick="pingMe()" value="Start"></button>
+        </form>
+      
+      </div>
+
+    </div>
+
+    <h2>Why should I run this measurement?</h2>
+
+    <p>As we explain in the <a
+    href="https://github.com/mami-project/rtt-privacy-paper">paper</a>, it may
+    be possible for a third party in the Internet to determine activity on
+    your home network, provided the four following assumptions hold:</p>
+
+    <ul>
+      <li><b>Your access link is your bottleneck link.</b> This is the case on
+      most residential networks.</li>
+      <li><b>Your access link is excessively buffered.</b> Though the
+      networking community has known about "bufferbloat" for some time, and
+      newer residential equipment is less likely to suffer from it, this is
+      still a common occurence. Bufferbloat causes a large variance between
+      latency under load and latency when not loaded.</li>
+      <li><b>You are the exclusive user of your public IP.</b> This is not the
+      case if your ISP uses carrier-grade NAT.</li>
+      <li><b>Your access link does not treat ICMP packets
+      differently.</b></li>
+    </ul>
+
+    <p>This measurement checks whether these assumptions hold by attempting to
+    measure load on your link remotely. If the results show a more or less
+    straight line, where RTT is independent of load, one or more of the
+    assumptions do not hold. Perhaps your access link is behind a
+    carrier-grade NAT, or the buffering on your access link is not excessive.
+    If the results show a pronounced plateau, with baseline latency
+    significantly lower than latency under load, then remote entities may be
+    able to estimate load on your link via ping.</p>
+
+    <h2>How does it work?</h2>
+
+    First, the tool downloads the content you chose, to determines how long it
+    takes. It then requests a continuous ping for that duration from a remote
+    ping service, running on this server, which is independent from the
+    content server. This simulates a third party trying to determine load on
+    your link. Then it downloads the content a second time to load the link,
+    and finally retrieves and displays ping results from the remote ping
+    service.
+
+    <h2>What data do we collect, and how do we use it?</h2>
+
+    <p>The record of the ping, including your public IP address, timestamps,
+    loss and latency information, are stored on this server. We may use the
+    data in aggregate form in future publications or presentations about the
+    ability of remote measurement to determine residential network activity,
+    about bufferbloat in general, or about related topics. Aggregates will
+    never identify individual users; the least aggregated form of published
+    data may identify ISPs by BGP autonomous system associated with your IP
+    address.</p>
+
+    <p>You can see the raw data we collect by clicking the raw data link after
+    the measurement is finished. If you'd like to delete your data after the
+    measurement is complete, send this link to <a
+    href="mailto:trammell@tik.ee.ethz.ch">trammell@tik.ee.ethz.ch</a>
+    requesting deletion.</p>
+
+    <script>
+      var pingconfig
+      document.getElementById("content-url").value = pingconfig.contentURL
+    </script>
+  </body>
+</html>

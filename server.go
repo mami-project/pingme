@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -45,14 +46,22 @@ func streamCopy(in io.Reader, out io.Writer) error {
 
 type PingAPI struct {
 	cachedir  string
+	page      []byte
 	waitgroup chan struct{}
 }
 
-func NewPingAPI(cachedir string, concurrency int) *PingAPI {
+func NewPingAPI(cachedir string, roothtml string, concurrency int) (*PingAPI, error) {
 	pa := new(PingAPI)
 	pa.cachedir = cachedir
 	pa.waitgroup = make(chan struct{}, concurrency)
-	return pa
+
+	var err error
+	pa.page, err = ioutil.ReadFile(roothtml)
+	if err != nil {
+		return nil, err
+	}
+
+	return pa, nil
 }
 
 func (pa *PingAPI) AddRoutes(r *mux.Router) {
@@ -62,16 +71,8 @@ func (pa *PingAPI) AddRoutes(r *mux.Router) {
 }
 
 func (pa *PingAPI) HandleRoot(w http.ResponseWriter, r *http.Request) {
-	out := struct {
-		Ping   string `json:"ping"`
-		Readme string `json:"readme"`
-	}{
-		Ping:   "/ping",
-		Readme: "https://github.com/mami-project/pingme",
-	}
-
-	b, _ := json.Marshal(out)
-	w.Write(b)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write(pa.page)
 }
 
 func (pa *PingAPI) HandlePingRequest(w http.ResponseWriter, r *http.Request) {
