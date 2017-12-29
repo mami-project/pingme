@@ -29,11 +29,11 @@ func init() {
 
 	switch runtime.GOOS {
 	case "darwin":
-		regexp4Str = "\\d+ bytes from ([^:]+): icmp_seq=(\\d+) ttl=(\\d+) time=(\\d+\\.\\d+) ms"
-		regexp6Str = "\\d+ bytes from ([^,]+), icmp_seq=(\\d+) hlim=(\\d+) time=(\\d+\\.\\d+) ms"
+		regexp4Str = "\\d+ bytes from ([^:]+): icmp_seq=(\\d+) ttl=(\\d+) time=([0123456789.]+) ms"
+		regexp6Str = "\\d+ bytes from ([^,]+), icmp_seq=(\\d+) hlim=(\\d+) time=([0123456789.]+) ms"
 	case "linux":
-		regexp4Str = "\\d+ bytes from ([^:]+): icmp_seq=(\\d+) ttl=(\\d+) time=(\\d+\\.\\d+) ms"
-		regexp6Str = "\\d+ bytes from ([^,]+), icmp_seq=(\\d+) hlim=(\\d+) time=(\\d+\\.\\d+) ms"
+		regexp4Str = "\\d+ bytes from ([^:]+): icmp_seq=(\\d+) ttl=(\\d+) time=([0123456789.]+) ms"
+		regexp6Str = "\\d+ bytes from ([^,]+), icmp_seq=(\\d+) hlim=(\\d+) time=([0123456789.]+) ms"
 	}
 
 	ping4Regexp, err = regexp.Compile(regexp4Str)
@@ -117,11 +117,14 @@ func consumePingOutput(
 	// scan input until we're done
 	in := bufio.NewScanner(pipe)
 	for in.Scan() {
+		log.Printf("ping: %s", in.Text())
 		pd := parsePingLine(re, in.Text())
 		if pd != nil {
 			// got data, stamp the time and write to channel
 			pd.At = time.Now()
 			data <- pd
+		} else {
+			log.Printf("-- no regex match")
 		}
 	}
 

@@ -163,20 +163,23 @@
       newer residential equipment is less likely to suffer from it, this is
       still a common occurence. Bufferbloat causes a large variance between
       latency under load and latency when not loaded.</li>
-      <li><b>You are the exclusive user of your public IP.</b> This is not the
-      case if your ISP uses carrier-grade NAT.</li>
-      <li><b>Your access link does not treat ICMP packets
-      differently.</b></li>
+      <li><b>You are the exclusive user of your public IP during the time it
+      is assigned to you.</b> This is not the case if your ISP uses
+      carrier-grade NAT.</li>
+      <li><b>Your access link does not handle ICMP packets in a separate
+      queue.</b> Most residential access equipment uses only a single queue
+      per interface.</li>
     </ul>
 
     <p>This measurement checks whether these assumptions hold by attempting to
     measure load on your link remotely. If the results show a more or less
-    straight line, where RTT is independent of load, one or more of the
-    assumptions do not hold. Perhaps your access link is behind a
+    straight line, where RTT and loss are independent of load, one or more of
+    the assumptions do not hold. Perhaps your access link is behind a
     carrier-grade NAT, or the buffering on your access link is not excessive.
     If the results show a pronounced plateau, with baseline latency
-    significantly lower than latency under load, then remote entities may be
-    able to estimate load on your link via ping.</p>
+    significantly lower than latency under load, or if ping packets are lost
+    under load (the line goes to 0 in the graph displayed), then remote
+    entities may be able to estimate load on your link via ping.</p>
 
     <h2>How does it work?</h2>
 
