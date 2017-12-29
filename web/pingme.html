@@ -54,9 +54,9 @@
           return response
         })
 
-        if (pingResponse.status != 200) {
+        if (pingResponse.status > 299) {
           statusElement.textContent = "ping failed; see console"
-          console.log(pingResponse)
+          console.log("" + pingResponse.status + ": " + await pingResponse.blob())
           return
         }
 
