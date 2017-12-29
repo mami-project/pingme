@@ -17,7 +17,7 @@
       function renderTimeSeries(pingResults) {
         var resultElement = document.getElementById("result")
 
-        // FIXME data parsing and google charting goes here
+        // fixme render results here
       }
 
       async function pingMe() {
@@ -95,12 +95,13 @@
         // we know how long we asked to be pinged. we know how long the download took.
         // now wait the rest of the time...
         ok = await fetch(pingResultLink).then(function (response) {
-          return response.json
+          return response.json()
         }).then(function (json) {
           // FIXME somehow plot the results
           return true
         }).catch(function (error) {
           statusElement.textContent = "ping result retrieval failed; see console"
+          console.log(error)
           return false
         })
 

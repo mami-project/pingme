@@ -77,7 +77,6 @@ func (pa *PingAPI) HandleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pa *PingAPI) HandlePingRequest(w http.ResponseWriter, r *http.Request) {
-
 	addr, _ := extractRemote(r.RemoteAddr)
 
 	// defaults
@@ -156,6 +155,7 @@ func (pa *PingAPI) HandlePingRetrieve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 	streamCopy(infile, w)
 }
