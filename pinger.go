@@ -194,6 +194,13 @@ type PartialPingResultFile struct {
 	Link     string `json:"link"`
 }
 
+type ErrorPingResultFile struct {
+	Complete bool   `json:"complete"`
+	Link     string `json:"link"`
+	Target   string `json:"target"`
+	Error    string `json:"error"`
+}
+
 type PingResultFile struct {
 	Complete bool        `json:"complete"`
 	Link     string      `json:"link"`
@@ -238,9 +245,13 @@ func GoPingAndStore(
 		outfile.Truncate(0)
 
 		if err != nil {
-			b, err2 := json.Marshal(struct {
-				Error string `json:"error"`
-			}{err.Error()})
+			b, err2 := json.Marshal(ErrorPingResultFile{
+				Complete: true,
+				Link:     link,
+				Target:   addr.String(),
+				Error:    err.Error(),
+			})
+
 			if err2 == nil {
 				outfile.Write(b)
 				return
