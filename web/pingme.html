@@ -60,8 +60,10 @@
           return
         }
 
+        var pingResponseJson = await pingResponse.json()
+
         var pingStart = new Date()
-        var pingResultLink = new URL(pingResponse.json.link, pingconfig.pingURL)
+        var pingResultLink = new URL(pingResponseJson.link, pingconfig.pingURL)
 
         // wait four seconds to get baseline ping data, then start the download
         await sleep(4000)

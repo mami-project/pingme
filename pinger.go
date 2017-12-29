@@ -22,7 +22,6 @@ import (
 
 var timeOpt string
 var ping4Regexp, ping6Regexp *regexp.Regexp
-var parsePingLine func(*regexp.Regexp, string) *PingData
 
 func init() {
 	var regexp4Str, regexp6Str string
@@ -32,11 +31,9 @@ func init() {
 	case "darwin":
 		regexp4Str = "\\d+ bytes from ([^:]+): icmp_seq=(\\d+) ttl=(\\d+) time=(\\d+\\.\\d+) ms"
 		regexp6Str = "\\d+ bytes from ([^,]+), icmp_seq=(\\d+) hlim=(\\d+) time=(\\d+\\.\\d+) ms"
-		parsePingLine = parsePingLineMac
 	case "linux":
 		regexp4Str = "\\d+ bytes from ([^:]+): icmp_seq=(\\d+) ttl=(\\d+) time=(\\d+\\.\\d+) ms"
 		regexp6Str = "\\d+ bytes from ([^,]+), icmp_seq=(\\d+) hlim=(\\d+) time=(\\d+\\.\\d+) ms"
-		parsePingLine = parsePingLineLinux
 	}
 
 	ping4Regexp, err = regexp.Compile(regexp4Str)
@@ -85,31 +82,7 @@ func pingArgs(
 
 }
 
-func parsePingLineMac(re *regexp.Regexp, line string) *PingData {
-	m := re.FindStringSubmatch(line)
-	if len(m) > 0 {
-		seq, err := strconv.ParseInt(m[2], 10, 64)
-		if err != nil {
-			return nil
-		}
-
-		rtt, err := strconv.ParseFloat(m[4], 64)
-		if err != nil {
-			return nil
-		}
-
-		out := PingData{
-			Seq: int(seq),
-			RTT: time.Duration(int64(rtt * 1e6)),
-		}
-
-		return &out
-	}
-
-	return nil
-}
-
-func parsePingLineLinux(re *regexp.Regexp, line string) *PingData {
+func parsePingLine(re *regexp.Regexp, line string) *PingData {
 	m := re.FindStringSubmatch(line)
 	if len(m) > 0 {
 		seq, err := strconv.ParseInt(m[2], 10, 64)
