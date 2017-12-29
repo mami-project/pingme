@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -106,6 +107,7 @@ func (pa *PingAPI) HandlePingRequest(w http.ResponseWriter, r *http.Request) {
 	// kick off the ping to get a UUID
 	id, err := GoPingAndStore(pa.cachedir, r.Context(), addr, period, duration, pa.waitgroup)
 	if err != nil {
+		log.Printf("error pinging %s: %s", addr.String(), err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -132,6 +134,7 @@ func (pa *PingAPI) HandlePingRetrieve(w http.ResponseWriter, r *http.Request) {
 
 	pathok, err := filepath.Match(filepath.Join(pa.cachedir, "*"), inpath)
 	if err != nil {
+		log.Printf("error retrieving ping %s: %s", v["id"], err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -146,6 +149,7 @@ func (pa *PingAPI) HandlePingRetrieve(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "ping not found", http.StatusBadRequest)
 			return
 		} else {
+			log.Printf("error retrieving ping %s: %s", v["id"], err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
