@@ -229,9 +229,10 @@
       <li><b>You are the exclusive user of your public IP during the time it
       is assigned to you.</b> This is not the case if your ISP uses
       carrier-grade NAT.</li>
-      <li><b>Your access link does not handle ICMP packets in a separate
-      queue.</b> Most residential access equipment uses only a single queue
-      per interface.</li>
+      <li><b>Your access link does not block ping, or handle ICMP packets in a
+      separate queue.</b> While some ISPs do block ICMP traffic toward
+      residential access links, most residential access equipment uses only a
+      single queue per interface.</li>
     </ul>
 
     <p>This measurement checks whether these assumptions hold by attempting to
@@ -241,7 +242,7 @@
     carrier-grade NAT, or the buffering on your access link is not excessive.
     If the results show a pronounced plateau, with baseline latency
     significantly lower than latency under load, or if ping packets are lost
-    under load (the line goes to 0 in the graph displayed), then remote
+    under load, then remote
     entities may be able to estimate load on your link via ping.</p>
 
     <h2>How does it work?</h2>
