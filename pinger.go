@@ -117,14 +117,14 @@ func consumePingOutput(
 	// scan input until we're done
 	in := bufio.NewScanner(pipe)
 	for in.Scan() {
-		log.Printf("ping: %s", in.Text())
+		//log.Printf("ping: %s", in.Text())
 		pd := parsePingLine(re, in.Text())
 		if pd != nil {
 			// got data, stamp the time and write to channel
 			pd.At = time.Now()
 			data <- pd
 		} else {
-			log.Printf("-- no regex match")
+			//log.Printf("-- no regex match")
 		}
 	}
 
