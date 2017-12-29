@@ -3,21 +3,73 @@
   <head>
     <meta charset="utf8">
     <title>Ping Me</title>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script>
-      var pingconfig = {}
 
+    <style>
+
+      div#result {
+        width: 60%;
+        height: 400px;
+        border: 1px solid grey;
+      }
+
+      div#status {
+        width: 60%;
+        height: 40px;
+        margin-bottom: 4px;
+        border: 1px solid grey;
+      }
+
+      input#content-url {
+        width: 50%;
+      }
+      
+    </style>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    
+    <script>
+
+      // make sure we don't kick anything off until the charts are available
+      var chartsLoaded = false
+      google.charts.load('current', {packages: ['corechart', 'line']});
+      google.charts.setOnLoadCallback(function () { chartsLoaded = true });
+
+      // some configuration
+      var pingconfig = {}
       pingconfig.pingURL = new URL("/ping", window.location.href)
       pingconfig.contentURL = "https://cdn.spacetelescope.org/archives/images/large/heic0611b.jpg"
 
+      // utility function to sleep a bit
       function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
       }
 
-      function renderTimeSeries(pingResults) {
-        var resultElement = document.getElementById("result")
+      function renderPingSeries(pingJson) {
 
-        // fixme render results here
+        // dump ping results into a data table
+        var chartData = new google.visualization.DataTable();
+        chartData.addColumn('number', 'seq');
+        chartData.addColumn('number', 'RTT');
+
+        console.log(pingJson)
+
+        for (let pingResult of pingJson.results) {
+          chartData.addRow([pingResult.seq, pingResult.rtt])
+        }
+
+        // label the axes
+        var chartOptions = {
+          hAxis: {
+            title: 'ICMP sequence (500ms intervals)'
+          },
+          vAxis: {
+            title: 'RTT (ms)'
+          }
+        };
+
+        // plot in the result div
+        var chart = new google.visualization.LineChart(document.getElementById("result"));
+        chart.draw(chartData, chartOptions);
       }
 
       async function pingMe() {
@@ -26,6 +78,12 @@
         var downloadStart = new Date()
         var pingDuration
         var ok
+
+        // check chart load
+        if (!chartsLoaded) {
+          statusElement.textContent = "Google Charts not yet loaded, please wait a bit."
+          return
+        }
 
         // load content URL
         pingconfig.contentURL = document.getElementById("content-url").value
@@ -92,12 +150,11 @@
           await sleep(waitDuration)
         }
 
-        // we know how long we asked to be pinged. we know how long the download took.
-        // now wait the rest of the time...
+        // get results and render them
         ok = await fetch(pingResultLink).then(function (response) {
           return response.json()
         }).then(function (json) {
-          // FIXME somehow plot the results
+          renderPingSeries(json)
           return true
         }).catch(function (error) {
           statusElement.textContent = "ping result retrieval failed; see console"
@@ -122,8 +179,9 @@
     to the PAM 2018 paper <span class="paper-title">Revisiting the Privacy
     Implications of Two-Way Internet Latency Data</span>, available with
     source data 
-    <a class="paper-link"
-    href="https://github.com/mami-project/rtt-privacy-paper">here</a>.</p>
+    <a
+    href="https://github.com/mami-project/rtt-privacy-paper">here</a>. The source of the web tool is available <a
+    href="https://github.com/mami-project/pingme">here</a>. </p>
 
     <h2>Let's go!</h2>
 
@@ -134,9 +192,9 @@
 
     <div class="tool">
 
-      <div class="output" id="status">The measurement is not running.</div>
+      <div id="status">The measurement is not running.</div>
 
-      <div class="output" id="result">Results will appear here.</div>
+      <div id="result">Results will appear here.</div>
 
       <div class="controls">
 
