@@ -27,7 +27,8 @@
         margin-left: auto;
         margin-right: auto;
         margin-bottom: 4px;
-        padding: 2px;      
+        padding: 2px;  
+        background: white;    
       }
 
       div#result {
@@ -52,6 +53,13 @@
 
       h2 {
         border-bottom: 1px solid #666666;
+      }
+
+      img#mami-logo {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50%;
       }
 
     </style>
@@ -182,7 +190,7 @@
 
     <div class="content">
 
-      <h1>Ping Me (beta)</h1>
+      <h1>Ping Me<sup>beta</sup></h1>
 
       <p>This web tool measures the ability of a random Internet-connected node
       to estimate activity on your network link by pinging you. It's a companion
@@ -272,11 +280,25 @@
       data may identify ISPs by BGP autonomous system associated with your IP
       address.</p>
 
-      <p>You can see the raw data we collect by clicking the raw data link after
-      the measurement is finished. If you'd like to delete your data after the
-      measurement is complete, send this link to <a
-      href="mailto:trammell@tik.ee.ethz.ch">trammell@tik.ee.ethz.ch</a>
+      <p>You can see the raw data we collect by clicking the raw data link
+      after the measurement is finished. If you'd like to delete your data
+      after the measurement is complete, send this link to the contact below,
       requesting deletion.</p>
+
+      <h2>Who's responsible for this?</h2>
+
+      <!-- If you run this yourself, please change this section. -->
+
+      <p>This service is run by the <a
+      href="https://mami-project.eu/">Measurement and Analysis for a
+      Middleboxed Internet</a> (MAMI) project, funded by the European
+      Commission under the Horizon 2020 program under grant agreement No
+      688421, and by the Swiss State Secretariat for Education, Research and
+      Innovation under contract number 15.0268. This support does not imply
+      endorsement. Contact <a href="mailto:trammell@tik.ee.ethz.ch">Brian
+      Trammell</a> for questions about the code or this online service.</p>
+
+      <a href="https://mami-project.eu"><img id="mami-logo" src="https://raw.githubusercontent.com/mami-project/roadshows/master/logos/mami-bauhaus.png" width="300"></a>
 
     </div>
     
