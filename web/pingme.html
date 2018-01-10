@@ -64,7 +64,7 @@
       google.charts.load('current', {packages: ['corechart', 'line']})
       google.charts.setOnLoadCallback(function () {
         // make sure we don't kick anything off until the charts are available
-        document.getElementById('startBtn').removeAttribute('disabled')
+        document.getElementById('startButton').removeAttribute('disabled')
       })
 
       // some configuration
@@ -210,7 +210,7 @@
 
           <form>
             Content: <input type="url" id="content-url"></input>
-            <input type="button" disabled onclick="pingMe()" value="Start"></button>
+            <input type="button" id="startButton" disabled onclick="pingMe()" value="Start"></button>
           </form>
         
         </div>
