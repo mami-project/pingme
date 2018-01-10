@@ -30,35 +30,40 @@
     <script>
 
       // make sure we don't kick anything off until the charts are available
-      var chartsLoaded = false
-      google.charts.load('current', {packages: ['corechart', 'line']});
-      google.charts.setOnLoadCallback(function () { chartsLoaded = true });
+      google.charts.load('current', {packages: ['corechart', 'line']})
+      google.charts.setOnLoadCallback(function () {
+        // make sure we don't kick anything off until the charts are available
+        document.getElementById('startBtn').removeAttribute('disabled')
+      })
 
       // some configuration
-      var pingconfig = {}
-      pingconfig.pingURL = new URL("/ping", window.location.href)
-      pingconfig.contentURL = "https://cdn.spacetelescope.org/archives/images/large/heic0611b.jpg"
+      const pingconfig = {
+        pingURL: new URL("/ping", window.location.href),
+        contentURL: "https://cdn.spacetelescope.org/archives/images/large/heic0611b.jpg"
+      }
 
       // utility function to sleep a bit
       function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
       }
 
+      // Take a complete result (including at least one data point) 
+      // from the pingme backend, and render it using google charts
       function renderPingSeries(pingJson) {
 
         // dump ping results into a data table
-        var chartData = new google.visualization.DataTable();
+        const chartData = new google.visualization.DataTable();
         chartData.addColumn('number', 'seq');
         chartData.addColumn('number', 'RTT');
 
         console.log(pingJson)
 
-        for (let pingResult of pingJson.results) {
-          chartData.addRow([pingResult.seq, pingResult.rtt])
+        for (const {seq, rtt} of pingJson.results) {
+          chartData.addRow([seq, rtt])
         }
 
         // label the axes
-        var chartOptions = {
+        const chartOptions = {
           hAxis: {
             title: 'ICMP sequence (500ms intervals)'
           },
@@ -68,7 +73,7 @@
         };
 
         // plot in the result div
-        var chart = new google.visualization.LineChart(document.getElementById("result"));
+        const chart = new google.visualization.LineChart(document.getElementById("result"));
         chart.draw(chartData, chartOptions);
       }
 
@@ -204,7 +209,7 @@
 
         <form>
           Content: <input type="url" id="content-url"></input>
-          <input type="button" onclick="pingMe()" value="Start"></button>
+          <input type="button" disabled onclick="pingMe()" value="Start"></button>
         </form>
       
       </div>
