@@ -78,105 +78,73 @@
       }
 
       async function pingMe() {
-        var statusElement = document.getElementById("status")
-
-        var downloadStart = new Date()
-        var pingDuration
-        var ok
-
-        // check chart load
-        if (!chartsLoaded) {
-          statusElement.textContent = "Google Charts not yet loaded, please wait a bit."
-          return
-        }
+        const statusElement = document.getElementById('status')
+        const downloadStart = new Date()
+        let phase = ''
 
         // load content URL
-        pingconfig.contentURL = document.getElementById("content-url").value
+        pingconfig.contentURL = document.getElementById('content-url').value
 
-        // intial download
-        statusElement.textContent = "step 1: downloading content to determine ping duration"
 
-        ok = await fetch(pingconfig.contentURL, {cache: "no-store"}).then(function (response) {
-          return response.blob()
-        }).then(function (blob) {
-          pingDuration = 10 + Math.floor((new Date() - downloadStart) / 1000)
-          return true
-        }).catch(function (error) {
-          statusElement.textContent = "initial content download failed; see console"
-          console.log(error)
-        })
+        try {
+          // intial download
+          statusElement.textContent = 'step 1: downloading content to determine ping duration'
+          phase = 'initial content download'
 
-        if (!ok) {
-          return
-        }
+          let response = await fetch(pingconfig.contentURL, {cache: 'no-store'})
+          await response.blob()
+          const pingDuration = 10 + Math.floor((new Date() - downloadStart) / 1000)
 
-        // request ping
-        statusElement.textContent = "step 2: starting ping for " + pingDuration + " seconds" 
+          // request ping
+          statusElement.textContent = 'step 2: starting ping for ' + pingDuration + ' seconds'
+          phase = 'ping initiation'
 
-        var pingResponse = await fetch(pingconfig.pingURL + "?period=0.5&duration=" + pingDuration).then(function (response) {
-          return response
-        })
+          const pingResponse = await fetch(pingconfig.pingURL + '?period=0.5&duration=' + pingDuration)
 
-        if (pingResponse.status > 299) {
-          statusElement.textContent = "ping failed; see console"
-          console.log("" + pingResponse.status + ": " + await pingResponse.blob())
-          return
-        }
+          if (pingResponse.status > 299) {
+            throw new Error('' + pingResponse.status + ': ' + await pingResponse.blob())
+          }
 
-        var pingResponseJson = await pingResponse.json()
+          const pingResponseJson = await pingResponse.json()
 
-        var pingStart = new Date()
-        var pingResultLink = new URL(pingResponseJson.link, pingconfig.pingURL)
+          const pingStart = new Date()
+          const pingResultLink = new URL(pingResponseJson.link, pingconfig.pingURL)
 
-        // wait four seconds to get baseline ping data, then start the download
-        await sleep(4000)
+          // wait four seconds to get baseline ping data, then start the download
+          await sleep(4000)
 
-        statusElement.textContent = "step 3: downloading content to load link" 
+          statusElement.textContent = 'step 3: downloading content to load link'
+          phase = 'primary content download'
 
-        ok = await fetch(pingconfig.contentURL, {cache: "no-store"}).then(function (response) {
-          return response.blob()
-        }).then(function (blob) {
-          return true
-        }).catch(function (error) {
-          statusElement.textContent = "primary content download failed; see console"
-          console.log(error)
-          return false
-        })
+          response = await fetch(pingconfig.contentURL, {cache: 'no-store'})
+          await response.blob()
 
-        if (!ok) {
-          return
-        }
+          // we know how long we asked to be pinged. we know how long the download took.
+          // now wait the rest of the time...
+          const waitDuration = (pingDuration + 3) * 1000 - (new Date() - pingStart)
+          if (waitDuration > 0) {
+            statusElement.textContent = 'step 4: waiting ' + Math.round(waitDuration / 1000) + 's for ping to complete'
+            await sleep(waitDuration)
+          }
 
-        // we know how long we asked to be pinged. we know how long the download took.
-        // now wait the rest of the time...
-        var waitDuration = (pingDuration + 3) * 1000 - (new Date() - pingStart)
-        if (waitDuration > 0) {
-          statusElement.textContent = "step 4: waiting "+Math.round(waitDuration / 1000)+"s for ping to complete"
-          await sleep(waitDuration)
-        }
+          // get results and render them
+          phase = 'ping result download'
+          response = await fetch(pingResultLink)
+          const json = response.json()
 
-        // get results and render them
-        ok = await fetch(pingResultLink).then(function (response) {
-          return response.json()
-        }).then(function (json) {
           if (json.error || !json.results) {
             document.getElementById("result").textContent = "No RTT data available. Your ISP probably blocks ICMP."
           } else {
             renderPingSeries(json)
           }
-          return true
-        }).catch(function (error) {
-          statusElement.textContent = "ping result retrieval failed; see console"
+
+          statusElement.textContent = 'measurement complete: results from ' + pingResultLink
+        } catch (error) {
+          statusElement.textContent = phase + ' failed; see console'
           console.log(error)
-          return false
-        })
-
-        if (!ok) {
-          return
         }
-
-        statusElement.textContent =  "measurement complete: results from "+pingResultLink.toString()
       }
+
     </script>
   </head>
   <body>
@@ -278,7 +246,6 @@
     requesting deletion.</p>
 
     <script>
-      var pingconfig
       document.getElementById("content-url").value = pingconfig.contentURL
     </script>
   </body>
