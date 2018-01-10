@@ -4,25 +4,56 @@
     <meta charset="utf8">
     <title>Ping Me</title>
 
+    <link href='https://fonts.googleapis.com/css?family=Lato' rel='stylesheet'>
+
     <style>
 
-      div#result {
-        width: 60%;
-        height: 400px;
+      body {
+        background: #cccccc;
+        font-family: "Lato";
+      }
+
+      div.content {        
+        background: #eeeeee;
+        width: 600px;
+        padding: 40px;
+        margin: auto;
+        border: 3px solid grey;
+      }
+
+      div.output {
+        width: 80%;
         border: 1px solid grey;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 4px;
+        padding: 2px;      
+      }
+
+      div#result {
+        height: 400px;
       }
 
       div#status {
-        width: 60%;
         height: 40px;
-        margin-bottom: 4px;
-        border: 1px solid grey;
       }
 
       input#content-url {
-        width: 50%;
+        width: 75%;
+      }
+
+      span.paper-title {
+        font-style: italic;
       }
       
+      h1 {
+        border-bottom: 2px solid #333333;
+      }
+
+      h2 {
+        border-bottom: 1px solid #666666;
+      }
+
     </style>
 
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -149,102 +180,106 @@
   </head>
   <body>
 
-    <h1>Ping Me, version 0.0.1</h1>
+    <div class="content">
 
-    <p>This web tool measures the ability of a random Internet-connected node
-    to estimate activity on your network link by pinging you. It's a companion
-    to the PAM 2018 paper <span class="paper-title">Revisiting the Privacy
-    Implications of Two-Way Internet Latency Data</span>, available with
-    source data 
-    <a
-    href="https://github.com/mami-project/rtt-privacy-paper">here</a>. The source of the web tool is available <a
-    href="https://github.com/mami-project/pingme">here</a>. </p>
+      <h1>Ping Me (beta)</h1>
 
-    <h2>Let's go!</h2>
+      <p>This web tool measures the ability of a random Internet-connected node
+      to estimate activity on your network link by pinging you. It's a companion
+      to the PAM 2018 paper <span class="paper-title">Revisiting the Privacy
+      Implications of Two-Way Internet Latency Data</span>, available with
+      source data 
+      <a
+      href="https://github.com/mami-project/rtt-privacy-paper">here</a>. The source of the web tool is available <a
+      href="https://github.com/mami-project/pingme">here</a>. </p>
 
-    <p>Click "start" below the to start the measurement. You can specify an
-    alternate content URL; it should be something that takes at least a few
-    seconds to download on your connection, though. Read below for details on
-    what's happening.</p>
+      <h2>Let's go!</h2>
 
-    <div class="tool">
+      <p>Click "start" below the to start the measurement. You can specify an
+      alternate content URL; it should be something that takes at least a few
+      seconds to download on your connection, though. Read below for details on
+      what's happening.</p>
 
-      <div id="status">The measurement is not running.</div>
+      <div class="tool">
 
-      <div id="result">Results will appear here.</div>
+        <div class="output" id="status">The measurement is not running.</div>
 
-      <div class="controls">
+        <div class="output" id="result">Results will appear here.</div>
 
-        <form>
-          Content: <input type="url" id="content-url"></input>
-          <input type="button" disabled onclick="pingMe()" value="Start"></button>
-        </form>
-      
+        <div class="controls">
+
+          <form>
+            Content: <input type="url" id="content-url"></input>
+            <input type="button" disabled onclick="pingMe()" value="Start"></button>
+          </form>
+        
+        </div>
+
       </div>
 
+      <h2>Why should I run this measurement?</h2>
+
+      <p>As we explain in the <a
+      href="https://github.com/mami-project/rtt-privacy-paper">paper</a>, it may
+      be possible for a third party in the Internet to determine activity on
+      your home network, provided the four following assumptions hold:</p>
+
+      <ul>
+        <li><b>Your access link is your bottleneck link.</b> This is the case on
+        most residential networks.</li>
+        <li><b>Your access link is excessively buffered.</b> Though the
+        networking community has known about "bufferbloat" for some time, and
+        newer residential equipment is less likely to suffer from it, this is
+        still a common occurence. Bufferbloat causes a large variance between
+        latency under load and latency when not loaded.</li>
+        <li><b>You are the exclusive user of your public IP during the time it
+        is assigned to you.</b> This is not the case if your ISP uses
+        carrier-grade NAT.</li>
+        <li><b>Your access link does not block ping, or handle ICMP packets in a
+        separate queue.</b> While some ISPs do block ICMP traffic toward
+        residential access links, most residential access equipment uses only a
+        single queue per interface.</li>
+      </ul>
+
+      <p>This measurement checks whether these assumptions hold by attempting to
+      measure load on your link remotely. If the results show a more or less
+      straight line, where RTT and loss are independent of load, one or more of
+      the assumptions do not hold. Perhaps your access link is behind a
+      carrier-grade NAT, or the buffering on your access link is not excessive.
+      If the results show a pronounced plateau, with baseline latency
+      significantly lower than latency under load, or if ping packets are lost
+      under load, then remote
+      entities may be able to estimate load on your link via ping.</p>
+
+      <h2>How does it work?</h2>
+
+      First, the tool downloads the content you chose, to determines how long it
+      takes. It then requests a continuous ping for that duration from a remote
+      ping service, running on this server, which is independent from the
+      content server. This simulates a third party trying to determine load on
+      your link. Then it downloads the content a second time to load the link,
+      and finally retrieves and displays ping results from the remote ping
+      service.
+
+      <h2>What data do we collect, and how do we use it?</h2>
+
+      <p>The record of the ping, including your public IP address, timestamps,
+      loss and latency information, are stored on this server. We may use the
+      data in aggregate form in future publications or presentations about the
+      ability of remote measurement to determine residential network activity,
+      about bufferbloat in general, or about related topics. Aggregates will
+      never identify individual users; the least aggregated form of published
+      data may identify ISPs by BGP autonomous system associated with your IP
+      address.</p>
+
+      <p>You can see the raw data we collect by clicking the raw data link after
+      the measurement is finished. If you'd like to delete your data after the
+      measurement is complete, send this link to <a
+      href="mailto:trammell@tik.ee.ethz.ch">trammell@tik.ee.ethz.ch</a>
+      requesting deletion.</p>
+
     </div>
-
-    <h2>Why should I run this measurement?</h2>
-
-    <p>As we explain in the <a
-    href="https://github.com/mami-project/rtt-privacy-paper">paper</a>, it may
-    be possible for a third party in the Internet to determine activity on
-    your home network, provided the four following assumptions hold:</p>
-
-    <ul>
-      <li><b>Your access link is your bottleneck link.</b> This is the case on
-      most residential networks.</li>
-      <li><b>Your access link is excessively buffered.</b> Though the
-      networking community has known about "bufferbloat" for some time, and
-      newer residential equipment is less likely to suffer from it, this is
-      still a common occurence. Bufferbloat causes a large variance between
-      latency under load and latency when not loaded.</li>
-      <li><b>You are the exclusive user of your public IP during the time it
-      is assigned to you.</b> This is not the case if your ISP uses
-      carrier-grade NAT.</li>
-      <li><b>Your access link does not block ping, or handle ICMP packets in a
-      separate queue.</b> While some ISPs do block ICMP traffic toward
-      residential access links, most residential access equipment uses only a
-      single queue per interface.</li>
-    </ul>
-
-    <p>This measurement checks whether these assumptions hold by attempting to
-    measure load on your link remotely. If the results show a more or less
-    straight line, where RTT and loss are independent of load, one or more of
-    the assumptions do not hold. Perhaps your access link is behind a
-    carrier-grade NAT, or the buffering on your access link is not excessive.
-    If the results show a pronounced plateau, with baseline latency
-    significantly lower than latency under load, or if ping packets are lost
-    under load, then remote
-    entities may be able to estimate load on your link via ping.</p>
-
-    <h2>How does it work?</h2>
-
-    First, the tool downloads the content you chose, to determines how long it
-    takes. It then requests a continuous ping for that duration from a remote
-    ping service, running on this server, which is independent from the
-    content server. This simulates a third party trying to determine load on
-    your link. Then it downloads the content a second time to load the link,
-    and finally retrieves and displays ping results from the remote ping
-    service.
-
-    <h2>What data do we collect, and how do we use it?</h2>
-
-    <p>The record of the ping, including your public IP address, timestamps,
-    loss and latency information, are stored on this server. We may use the
-    data in aggregate form in future publications or presentations about the
-    ability of remote measurement to determine residential network activity,
-    about bufferbloat in general, or about related topics. Aggregates will
-    never identify individual users; the least aggregated form of published
-    data may identify ISPs by BGP autonomous system associated with your IP
-    address.</p>
-
-    <p>You can see the raw data we collect by clicking the raw data link after
-    the measurement is finished. If you'd like to delete your data after the
-    measurement is complete, send this link to <a
-    href="mailto:trammell@tik.ee.ethz.ch">trammell@tik.ee.ethz.ch</a>
-    requesting deletion.</p>
-
+    
     <script>
       document.getElementById("content-url").value = pingconfig.contentURL
     </script>
