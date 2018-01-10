@@ -155,7 +155,7 @@
           return response.json()
         }).then(function (json) {
           if (json.error || !json.results) {
-            document.getElementById("result").textContent("No RTT data available. Your ISP probably blocks ICMP.")
+            document.getElementById("result").textContent = "No RTT data available. Your ISP probably blocks ICMP."
           } else {
             renderPingSeries(json)
           }
