@@ -159,8 +159,8 @@
         ok = await fetch(pingResultLink).then(function (response) {
           return response.json()
         }).then(function (json) {
-          if (json.error) {
-            document.getElementById("result").textContent("No RTT data available. Your ISP probably blocks ICMP.")
+          if (json.error || !json.results) {
+            document.getElementById("result").textContent = "No RTT data available. Your ISP probably blocks ICMP."
           } else {
             renderPingSeries(json)
           }
